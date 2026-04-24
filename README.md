@@ -108,7 +108,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/<your-username>/homelab-observability.git
+git clone https://github.com/wamudus/homelab-observability.git
 cd homelab-observability
 
 # 在dingtalk.yml中设置你的token
