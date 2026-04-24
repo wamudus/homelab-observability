@@ -1,0 +1,4 @@
+- targets: 
+  - 'node-exporter:9100'
+  labels:
+    group: "node-exporter"

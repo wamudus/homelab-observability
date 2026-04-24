@@ -1,0 +1,8 @@
+templates:
+  - /etc/prometheus-webhook-dingtalk/dingtalk.tmpl
+targets:
+  example:
+    url: "https://oapi.dingtalk.com/robot/send?access_token=< your token >"
+    message:
+      title: '{{ template "dingtalk.default.title" . }}'
+      text: '{{ template "dingtalk.default.content" . }}'

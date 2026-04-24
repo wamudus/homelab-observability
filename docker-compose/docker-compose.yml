@@ -1,0 +1,132 @@
+version: "3.8"
+networks:
+  observe:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.90.0.0/24
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  alertmanager-data:
+  loki-data:
+  promtail-data:
+
+services:
+  prometheus:
+    image: docker.io/prom/prometheus:v2.51.2
+    container_name: prometheus
+    networks:
+      - observe
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus.yml:/prometheus/prometheus.yml:ro
+      - ./alert_rules.yml:/prometheus/alert_rules.yml:ro
+    command:
+      - '--config.file=/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      - alertmanager
+
+  node-exporter:
+    image: docker.io/prom/node-exporter:v1.7.0
+    container_name: node-exporter
+    networks:
+      - observe
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+    restart: unless-stopped
+
+  alertmanager:
+    image: docker.io/prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    networks:
+      - observe
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    image: docker.io/grafana/grafana:10.4.2
+    container_name: grafana
+    networks:
+      - observe
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/provisioning/dashboards:/var/lib/grafana/dashboards:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      - prometheus
+      - loki
+
+
+  loki:
+    image: docker.io/grafana/loki:3.4.1
+    container_name: loki
+    networks:
+      - observe
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    command: 
+      - "--config.file=/etc/loki/local-config.yaml"
+
+  promtail:
+    image: docker.io/grafana/promtail:3.4.1
+    container_name: promtail
+    networks:
+      - observe
+    volumes:
+      - promtail-data:/tmp/position
+      - ./promtail-config.yaml:/etc/promtail/promtail-config.yaml
+      - /var/log:/var/log:ro
+    command:
+      - "--config.file=/etc/promtail/promtail-config.yaml"
+
+  webhook-dingtalk:
+    image: docker.io/timonwong/prometheus-webhook-dingtalk:v2.1.0
+    container_name: dingtalk
+    networks:
+      - observe
+    ports:
+      - "8060:8060"
+    volumes:
+      - ./dingtalk.yml:/etc/prometheus-webhook-dingtalk/config.yml
+      - ./dingtalk.tmpl:/etc/prometheus-webhook-dingtalk/dingtalk.tmpl

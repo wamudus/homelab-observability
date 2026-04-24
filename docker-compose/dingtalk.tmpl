@@ -1,0 +1,21 @@
+{{ define "dingtalk.default.title" }}
+{{ if eq .Status "firing" }}🔴 告警触发{{ else }}🟢 告警恢复{{ end }}
+{{ end }}
+
+{{ define "dingtalk.default.content" }}
+{{ range .Alerts }}
+**告警名称**: {{ .Labels.alertname }}
+
+**实例**: {{ .Labels.instance }}
+
+**级别**: {{ .Labels.severity }}
+{{ if eq .Status "firing" }}
+**状态**: ⚠️ 触发中
+
+**详情**: {{ .Annotations.description }}
+{{ else }}
+**状态**: ✅ 已恢复
+{{ end }}
+---
+{{ end }}
+{{ end }}
