@@ -108,8 +108,8 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/wamudus/homelab-observability.git
-cd homelab-observability
+git clone https://github.com/wamudus/node-observability-baseline.git
+cd node-observability-baseline
 
 # 在dingtalk.yml中设置你的token
 templates:
