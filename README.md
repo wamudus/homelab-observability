@@ -1,4 +1,4 @@
-# 🏠 Homelab Observability Stack
+# 📊 Node Observability Baseline
 
 > 可直接业务化的主机监控与日志告警基线方案，基于 Docker Compose 一键部署 **Metrics + Logs + Alerting + Visualization**。
 
