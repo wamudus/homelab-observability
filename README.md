@@ -305,5 +305,4 @@ volumes:
 ---
 
 ## 📄 许可证
-
-MIT License © 2024
+[MIT](LICENSE) © 2026 [wamudus]
